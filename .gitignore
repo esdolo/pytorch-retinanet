@@ -23,7 +23,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-VOD/VOD/training_dataset/
+FOD/FOD/training_dataset/
 *.pth
 *.ipynb
 
