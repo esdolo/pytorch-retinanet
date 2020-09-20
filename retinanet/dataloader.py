@@ -189,6 +189,7 @@ class CSVDataset(Dataset):
                 class_name, class_id = row
             except ValueError:
                 raise(ValueError('line {}: format should be \'class_name,class_id\''.format(line)))
+                
             class_id = self._parse(class_id, int, 'line {}: malformed class ID: {{}}'.format(line))
 
             if class_name in result:

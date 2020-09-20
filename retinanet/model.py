@@ -173,7 +173,7 @@ class ResNet(nn.Module):
             fpn_sizes = [self.layer2[layers[1] - 1].conv3.out_channels, self.layer3[layers[2] - 1].conv3.out_channels,
                          self.layer4[layers[3] - 1].conv3.out_channels]
         else:
-            raise ValueError(f"Block type {block} not understood")
+            raise ValueError("Block type {block} not understood")
 
         self.fpn = PyramidFeatures(fpn_sizes[0], fpn_sizes[1], fpn_sizes[2])
 
@@ -229,6 +229,9 @@ class ResNet(nn.Module):
                 layer.eval()
 
     def forward(self, inputs):
+
+        #import pdb
+        #pdb.set_trace()
 
         if self.training:
             img_batch, annotations = inputs

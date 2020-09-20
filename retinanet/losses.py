@@ -25,6 +25,8 @@ class FocalLoss(nn.Module):
     #def __init__(self):
 
     def forward(self, classifications, regressions, anchors, annotations):
+        import pdb
+        pdb.set_trace()
         alpha = 0.25
         gamma = 2.0
         batch_size = classifications.shape[0]
@@ -171,7 +173,8 @@ class FocalLoss(nn.Module):
                     regression_losses.append(torch.tensor(0).float().cuda())
                 else:
                     regression_losses.append(torch.tensor(0).float())
-
+        import pdb
+        pdb.set_trace()
         return torch.stack(classification_losses).mean(dim=0, keepdim=True), torch.stack(regression_losses).mean(dim=0, keepdim=True)
 
     

@@ -1,3 +1,6 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+
 import argparse
 import collections
 
@@ -31,6 +34,9 @@ def main(args=None):
 
     parser.add_argument('--depth', help='Resnet depth, must be one of 18, 34, 50, 101, 152', type=int, default=50)
     parser.add_argument('--epochs', help='Number of epochs', type=int, default=100)
+    
+    parser.add_argument('--finetune', help='if load trained retina model', type=bool, default=False)
+    parser.add_argument('--gpu', help='', type=bool, default=False)
 
     parser = parser.parse_args(args)
 
@@ -87,14 +93,19 @@ def main(args=None):
     else:
         raise ValueError('Unsupported model depth, must be one of 18, 34, 50, 101, 152')
 
-    use_gpu = True
+    use_gpu = parser.gpu
+
+    #torch.cuda.set_device(5)
+    #import pdb
+    #pdb.set_trace()
 
     if use_gpu:
         if torch.cuda.is_available():
             retinanet = retinanet.cuda()
 
-    if torch.cuda.is_available():
+    if use_gpu and torch.cuda.is_available():
         retinanet = torch.nn.DataParallel(retinanet).cuda()
+        #retinanet = torch.nn.DataParallel(retinanet,device_ids=[4,5]).cuda()
     else:
         retinanet = torch.nn.DataParallel(retinanet)
 
@@ -122,8 +133,8 @@ def main(args=None):
             try:
                 optimizer.zero_grad()
 
-                if torch.cuda.is_available():
-                    classification_loss, regression_loss = retinanet([data['img'].cuda().float(), data['annot']])
+                if use_gpu and torch.cuda.is_available():
+                    classification_loss, regression_loss = retinanet([data['img'].cuda().float(), data['annot'].cuda()])
                 else:
                     classification_loss, regression_loss = retinanet([data['img'].float(), data['annot']])
                     

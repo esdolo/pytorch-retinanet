@@ -23,6 +23,10 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+VOD/VOD/training_dataset/
+*.pth
+*.ipynb
+
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
