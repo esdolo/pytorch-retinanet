@@ -60,6 +60,8 @@ def main(args=None):
 # 		retinanet = torch.nn.DataParallel(retinanet)
 
     retinanet = model.resnet50(num_classes=dataset_val.num_classes(), pretrained=True)
+    import pdb
+    pdb.set_trace()
 
     use_gpu = True
 

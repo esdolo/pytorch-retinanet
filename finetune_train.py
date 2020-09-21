@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 import argparse
 import collections
@@ -34,6 +34,7 @@ def main(args=None):
 
     parser.add_argument('--depth', help='Resnet depth, must be one of 18, 34, 50, 101, 152', type=int, default=50)
     parser.add_argument('--epochs', help='Number of epochs', type=int, default=100)
+    parser.add_argument('--model', help='Path to model (.pt) file.')
     
     parser.add_argument('--finetune', help='if load trained retina model', type=bool, default=False)
     parser.add_argument('--gpu', help='', type=bool, default=False)
@@ -82,6 +83,7 @@ def main(args=None):
         dataloader_val = DataLoader(dataset_val, num_workers=3, collate_fn=collater, batch_sampler=sampler_val)
 
     # Create the model
+    '''
     if parser.depth == 18:
         retinanet = model.resnet18(num_classes=dataset_train.num_classes(), pretrained=True)
     elif parser.depth == 34:
@@ -94,21 +96,29 @@ def main(args=None):
         retinanet = model.resnet152(num_classes=dataset_train.num_classes(), pretrained=True)
     else:
         raise ValueError('Unsupported model depth, must be one of 18, 34, 50, 101, 152')
+    '''
 
     use_gpu = parser.gpu
 
-    #torch.cuda.set_device(5)
     #import pdb
     #pdb.set_trace()
+
+    #读coco预训练模型
+    retinanet = model.resnet50(num_classes=80, pretrained=True)
+    retinanet.load_state_dict(torch.load(parser.model))
+    for param in retinanet.parameters():
+        param.requires_grad = False
+    retinanet.classificationModel = model.ClassificationModel(256, num_classes=dataset_train.num_classes())
 
     if use_gpu:
         if torch.cuda.is_available():
             retinanet = retinanet.cuda()
 
     if use_gpu and torch.cuda.is_available():
+        #retinanet.load_state_dict(torch.load(parser.model))
         retinanet = torch.nn.DataParallel(retinanet).cuda()
-
     else:
+        #retinanet.load_state_dict(torch.load(parser.model))
         retinanet = torch.nn.DataParallel(retinanet)
 
     retinanet.training = True
