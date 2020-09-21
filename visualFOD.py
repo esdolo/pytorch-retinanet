@@ -1,3 +1,5 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "4"
 import numpy as np
 import torchvision
 import time
@@ -58,7 +60,8 @@ def main(args=None):
 # 	else:
 # 		retinanet = torch.nn.DataParallel(retinanet)
 
-    retinanet = model.resnet50(num_classes=80, pretrained=True)
+    #retinanet = model.resnet50(num_classes=80, pretrained=True)
+    retinanet = torch.load(parser.model)
 
     use_gpu = True
 
@@ -67,10 +70,10 @@ def main(args=None):
             retinanet = retinanet.cuda()
 
     if torch.cuda.is_available():
-        retinanet.load_state_dict(torch.load(parser.model))
+        #retinanet.load_state_dict(torch.load(parser.model))
         retinanet = torch.nn.DataParallel(retinanet).cuda()
     else:
-        retinanet.load_state_dict(torch.load(parser.model))
+        #retinanet.load_state_dict(torch.load(parser.model))
         retinanet = torch.nn.DataParallel(retinanet)
 
     retinanet.eval()

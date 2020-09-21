@@ -43,6 +43,8 @@ For training using a custom dataset, with annotations in CSV format (see below),
 ```
 python train.py --dataset csv --csv_train <path/to/train_annots.csv>  --csv_classes <path/to/train/class_list.csv>  --csv_val <path/to/val_annots.csv>
 ```
+esdolo: standard_csv_training:
+python3 train.py --dataset csv --csv_train ./FOD/FOD/train_standard_annotation.csv  --csv_classes ./FOD/FOD/train_standard_classlist.csv --depth 18 --gpu True
 
 Note that the --csv_val argument is optional, in which case no validation will be performed.
 
@@ -162,3 +164,6 @@ bird,2
 ![img6](https://github.com/yhenon/pytorch-retinanet/blob/master/images/6.jpg)
 ![img7](https://github.com/yhenon/pytorch-retinanet/blob/master/images/7.jpg)
 ![img8](https://github.com/yhenon/pytorch-retinanet/blob/master/images/8.jpg)
+
+
+

@@ -37,6 +37,7 @@ def main(args=None):
     
     parser.add_argument('--finetune', help='if load trained retina model', type=bool, default=False)
     parser.add_argument('--gpu', help='', type=bool, default=False)
+    parser.add_argument('--batch_size', help='', type=int, default=2)
 
     parser = parser.parse_args(args)
 
@@ -72,7 +73,8 @@ def main(args=None):
     else:
         raise ValueError('Dataset type not understood (must be csv or coco), exiting.')
 
-    sampler = AspectRatioBasedSampler(dataset_train, batch_size=2, drop_last=False)
+    #sampler = AspectRatioBasedSampler(dataset_train, batch_size=2, drop_last=False)
+    sampler = AspectRatioBasedSampler(dataset_train, parser.batch_size, drop_last=False)
     dataloader_train = DataLoader(dataset_train, num_workers=3, collate_fn=collater, batch_sampler=sampler)
 
     if dataset_val is not None:
@@ -131,6 +133,9 @@ def main(args=None):
 
         for iter_num, data in enumerate(dataloader_train):
             try:
+                #import pdb
+                #pdb.set_trace()
+
                 optimizer.zero_grad()
 
                 if use_gpu and torch.cuda.is_available():
@@ -180,7 +185,8 @@ def main(args=None):
 
         scheduler.step(np.mean(epoch_loss))
 
-        torch.save(retinanet.module, '{}_retinanet_{}.pt'.format(parser.dataset, epoch_num))
+        if epoch_num%10==0:
+            torch.save(retinanet.module, '{}_retinanet_{}.pt'.format(parser.dataset, epoch_num))
 
     retinanet.eval()
 
