@@ -24,9 +24,11 @@ wheels/
 .installed.cfg
 *.egg
 FOD/FOD/training_dataset/
+foreign_object_dataset/Annotations/
+foreign_object_dataset/JPEGImages/
+runs/
 *.pth
 *.ipynb
-visualizeResult/
 
 
 # PyInstaller
