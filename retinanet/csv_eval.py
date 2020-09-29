@@ -149,7 +149,7 @@ def _get_annotations(generator):
     return all_annotations
 
 
-def evaluate(
+def evaluate_csv(
     generator,
     retinanet,
     iou_threshold=0.5,

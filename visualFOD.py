@@ -2,6 +2,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "4"
 import numpy as np
 import torchvision
+#此文件作废
 import time
 import os
 import copy
@@ -13,6 +14,7 @@ import glob
 import sys
 import cv2
 import random
+import skimage
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -43,7 +45,7 @@ def main(args=None):
 
     parser = parser.parse_args(args)
 
-    imglist= sorted(glob.glob(os.path.join(parser.data_dir, 'train_*.jpg')))
+    imglist= sorted(glob.glob(os.path.join(parser.data_dir, '*.jpg')))
     random.shuffle(imglist)
     imglist=imglist[:int(parser.num_totest)]
 
@@ -61,6 +63,8 @@ def main(args=None):
 # 		retinanet = torch.nn.DataParallel(retinanet)
 
     #retinanet = model.resnet50(num_classes=80, pretrained=True)
+    #retinanet.load_state_dict(torch.load(parser.model))
+    
     retinanet = torch.load(parser.model)
 
     use_gpu = True
@@ -80,20 +84,24 @@ def main(args=None):
     unnormalize = UnNormalizer()
 
     trans=transforms.ToTensor()
+    FODlabels=['nail','clipper_B','clipper_Y','Lstick','butt','foreign']
 
     for idx,path_name in enumerate(imglist):
         with torch.no_grad():
             st = time.time()
-            img = cv2.imread(path_name)
+            img = cv2.imread(path_name)       
+            img =  cv2.resize(img,(1056,608))
             img_tensor=trans(img).unsqueeze(0)
-            #pdb.set_trace()
 
             if torch.cuda.is_available():
                 scores, classification, transformed_anchors = retinanet(img_tensor.cuda().float())
             else:
                 scores, classification, transformed_anchors = retinanet(img_tensor.float())
             print('Elapsed time: {}'.format(time.time()-st))
-            idxs = np.where(scores.cpu()>0.5)
+            idxs = np.where(scores.cpu()>0.05)
+
+            import pdb
+            pdb.set_trace()
             
             #img[img<0] = 0
             #img[img>255] = 255
@@ -106,12 +114,12 @@ def main(args=None):
                 y1 = int(bbox[1])
                 x2 = int(bbox[2])
                 y2 = int(bbox[3])
-                label_name = 'Unknown'
+                label_name = FODlabels[int(classification[idxs[0][j]])]
+                #label_name='FOD'
                 draw_caption(img, (x1, y1, x2, y2), label_name)
 
                 cv2.rectangle(img, (x1, y1), (x2, y2), color=(0, 0, 255), thickness=2)
                 print(label_name)
-
             cv2.imwrite('./visualizeResult/visualize'+str(idx)+'.jpg', img)
             #cv2.waitKey(0)
             

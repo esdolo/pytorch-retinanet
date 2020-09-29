@@ -43,8 +43,10 @@ For training using a custom dataset, with annotations in CSV format (see below),
 ```
 python train.py --dataset csv --csv_train <path/to/train_annots.csv>  --csv_classes <path/to/train/class_list.csv>  --csv_val <path/to/val_annots.csv>
 ```
-esdolo: standard_csv_training:
-python3 train.py --dataset csv --csv_train ./FOD/FOD/train_standard_annotation.csv  --csv_classes ./FOD/FOD/train_standard_classlist.csv --depth 18 --gpu True
+wangqitai: standard_csv_training:
+python3 train.py --dataset csv --csv_train ./foreign_object_dataset/train_standard_annotation.csv --csv_classes ./foreign_object_dataset/class4_classlist.csv --depth 18 --epochs 100 --gpu True --batch_size 4
+
+python3 finetune_train.py --dataset csv --csv_train ./foreign_object_dataset/train_standard_annotation.csv --csv_classes ./foreign_object_dataset/class4_classlist.csv --model ./coco_resnet_50_map_0_335_state_dict.pt --depth 50 --gpu True --batch_size 4
 
 Note that the --csv_val argument is optional, in which case no validation will be performed.
 
@@ -94,6 +96,9 @@ This will visualize bounding boxes on the validation set. To visualise with a CS
 
 ```
 python visualize.py --dataset csv --csv_classes <path/to/train/class_list.csv>  --csv_val <path/to/val_annots.csv> --model <path/to/model.pt>
+
+wangqitai:
+python3 testshow.py  --model ./csv_retinanet18_SGD_100.pt --data_dir ./foreign_object_dataset/JPEGImages/ --num_totest 10 
 ```
 
 ## Model

@@ -3,6 +3,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 import argparse
 import collections
+import math
 
 import numpy as np
 
@@ -106,9 +107,18 @@ def main(args=None):
     #读coco预训练模型
     retinanet = model.resnet50(num_classes=80, pretrained=True)
     retinanet.load_state_dict(torch.load(parser.model))
-    for param in retinanet.parameters():
-        param.requires_grad = False
+    #for param in retinanet.parameters():
+    #    param.requires_grad = False
+
+    retinanet.regressionModel = model.RegressionModel(256)
     retinanet.classificationModel = model.ClassificationModel(256, num_classes=dataset_train.num_classes())
+
+    prior = 0.01
+    retinanet.classificationModel.output.weight.data.fill_(0)
+    retinanet.classificationModel.output.bias.data.fill_(-math.log((1.0 - prior) / prior))
+
+    retinanet.regressionModel.output.weight.data.fill_(0)
+    retinanet.regressionModel.output.bias.data.fill_(0)
 
     if use_gpu:
         if torch.cuda.is_available():
@@ -123,7 +133,8 @@ def main(args=None):
 
     retinanet.training = True
 
-    optimizer = optim.Adam(retinanet.parameters(), lr=1e-5)
+    optimizer = optim.Adam(retinanet.parameters(), lr=1e-6)
+    #optimizer = optim.Adam(retinanet.parameters(), lr=1e-6)
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
 
@@ -195,12 +206,12 @@ def main(args=None):
 
         scheduler.step(np.mean(epoch_loss))
 
-        if epoch_num%10==0:
-            torch.save(retinanet.module, '{}_retinanet_{}.pt'.format(parser.dataset, epoch_num))
+        if epoch_num%5==0:
+            torch.save(retinanet.module, '{}_finetune_{}.pt'.format(parser.dataset, epoch_num))
 
     retinanet.eval()
 
-    torch.save(retinanet, 'model_final.pt')
+    #torch.save(retinanet, 'model_finetune_reg&class_lr1e-6_final.pt')
 
 
 if __name__ == '__main__':

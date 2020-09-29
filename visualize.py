@@ -6,7 +6,7 @@ import copy
 import pdb
 import time
 import argparse
-
+#此文件作废
 import sys
 import cv2
 
@@ -31,15 +31,19 @@ def main(args=None):
     parser.add_argument('--coco_path', help='Path to COCO directory')
     parser.add_argument('--csv_classes', help='Path to file containing class list (see readme)')
     parser.add_argument('--csv_val', help='Path to file containing validation annotations (optional, see readme)')
+    parser.add_argument('--num2test', help='How many imgs to test.')
 
     parser.add_argument('--model', help='Path to model (.pt) file.')
 
     parser = parser.parse_args(args)
 
+    #import pdb
+    #pdb.set_trace()
+
     if parser.dataset == 'coco':
         dataset_val = CocoDataset(parser.coco_path, set_name='train2017', transform=transforms.Compose([Normalizer(), Resizer()]))
     elif parser.dataset == 'csv':
-        dataset_val = CSVDataset(train_file=parser.csv_train, class_list=parser.csv_classes, transform=transforms.Compose([Normalizer(), Resizer()]))
+        dataset_val = CSVDataset(train_file=parser.csv_val, class_list=parser.csv_classes, transform=transforms.Compose([Normalizer(), Resizer()]))
     else:
         raise ValueError('Dataset type not understood (must be csv or coco), exiting.')
 
@@ -59,9 +63,7 @@ def main(args=None):
 # 	else:
 # 		retinanet = torch.nn.DataParallel(retinanet)
 
-    retinanet = model.resnet50(num_classes=dataset_val.num_classes(), pretrained=True)
-    import pdb
-    pdb.set_trace()
+    retinanet = torch.load(parser.model)
 
     use_gpu = True
 
@@ -70,10 +72,10 @@ def main(args=None):
             retinanet = retinanet.cuda()
 
     if torch.cuda.is_available():
-        retinanet.load_state_dict(torch.load(parser.model))
+        #retinanet.load_state_dict(torch.load(parser.model))
         retinanet = torch.nn.DataParallel(retinanet).cuda()
     else:
-        retinanet.load_state_dict(torch.load(parser.model))
+        #retinanet.load_state_dict(torch.load(parser.model))
         retinanet = torch.nn.DataParallel(retinanet)
 
     retinanet.eval()
@@ -119,7 +121,9 @@ def main(args=None):
                 cv2.rectangle(img, (x1, y1), (x2, y2), color=(0, 0, 255), thickness=2)
                 print(label_name)
 
-            cv2.imwrite('visualize.jpg', img)
+            cv2.imwrite('./visualResult/visualize'+str(idx), img)
+            if idx>parser.num2test:
+                break
             #cv2.waitKey(0)
             return
 if __name__ == '__main__':

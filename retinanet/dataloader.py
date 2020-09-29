@@ -207,7 +207,7 @@ class CSVDataset(Dataset):
         sample = {'img': img, 'annot': annot}
         if self.transform:
             sample = self.transform(sample)
-
+        sample['filename']=self.image_names[idx]
         return sample
 
     def load_image(self, image_index):
@@ -304,6 +304,7 @@ def collater(data):
     imgs = [s['img'] for s in data]
     annots = [s['annot'] for s in data]
     scales = [s['scale'] for s in data]
+    filenames=[s['filename']for s in data]
         
     widths = [int(s.shape[0]) for s in imgs]
     heights = [int(s.shape[1]) for s in imgs]
@@ -335,7 +336,7 @@ def collater(data):
 
     padded_imgs = padded_imgs.permute(0, 3, 1, 2)
 
-    return {'img': padded_imgs, 'annot': annot_padded, 'scale': scales}
+    return {'img': padded_imgs, 'annot': annot_padded, 'scale': scales,'filename':filenames}
 
 class Resizer(object):
     """Convert ndarrays in sample to Tensors."""
