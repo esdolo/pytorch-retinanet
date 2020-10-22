@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "5"
+os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
 
 import argparse
 import collections
@@ -15,6 +15,7 @@ from retinanet import model
 from retinanet.dataloader import CocoDataset, CSVDataset, collater, Resizer, AspectRatioBasedSampler, Augmenter, \
     Normalizer
 from torch.utils.data import DataLoader
+from tensorboardX import SummaryWriter
 
 from retinanet import coco_eval
 from retinanet import csv_eval
@@ -37,7 +38,6 @@ def main(args=None):
     parser.add_argument('--epochs', help='Number of epochs', type=int, default=100)
     parser.add_argument('--model', help='Path to model (.pt) file.')
     
-    parser.add_argument('--finetune', help='if load trained retina model', type=bool, default=False)
     parser.add_argument('--gpu', help='', type=bool, default=False)
     parser.add_argument('--batch_size', help='', type=int, default=2)
 
@@ -77,7 +77,7 @@ def main(args=None):
 
     #sampler = AspectRatioBasedSampler(dataset_train, batch_size=2, drop_last=False)
     sampler = AspectRatioBasedSampler(dataset_train, parser.batch_size, drop_last=False)
-    dataloader_train = DataLoader(dataset_train, num_workers=3, collate_fn=collater, batch_sampler=sampler)
+    dataloader_train = DataLoader(dataset_train, num_workers=16, collate_fn=collater, batch_sampler=sampler)
 
     if dataset_val is not None:
         sampler_val = AspectRatioBasedSampler(dataset_val, batch_size=1, drop_last=False)
@@ -107,8 +107,8 @@ def main(args=None):
     #读coco预训练模型
     retinanet = model.resnet50(num_classes=80, pretrained=True)
     retinanet.load_state_dict(torch.load(parser.model))
-    #for param in retinanet.parameters():
-    #    param.requires_grad = False
+    for param in retinanet.parameters():
+        param.requires_grad = False
 
     retinanet.regressionModel = model.RegressionModel(256)
     retinanet.classificationModel = model.ClassificationModel(256, num_classes=dataset_train.num_classes())
@@ -133,7 +133,7 @@ def main(args=None):
 
     retinanet.training = True
 
-    optimizer = optim.Adam(retinanet.parameters(), lr=1e-6)
+    optimizer = optim.Adam(retinanet.parameters(), lr=1e-5)
     #optimizer = optim.Adam(retinanet.parameters(), lr=1e-6)
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
@@ -145,12 +145,18 @@ def main(args=None):
 
     print('Num training images: {}'.format(len(dataset_train)))
 
+    writer = SummaryWriter()
+
+    epochpassed=0
+
     for epoch_num in range(parser.epochs):
 
         retinanet.train()
         retinanet.module.freeze_bn()
 
         epoch_loss = []
+        epoch_classification_loss=[]
+        epoch_regression_loss=[]
 
         for iter_num, data in enumerate(dataloader_train):
             try:
@@ -181,16 +187,24 @@ def main(args=None):
                 loss_hist.append(float(loss))
 
                 epoch_loss.append(float(loss))
+                epoch_classification_loss.append(float(classification_loss))
+                epoch_regression_loss.append(float(regression_loss))
 
-                print(
-                    'Epoch: {} | Iteration: {} | Classification loss: {:1.5f} | Regression loss: {:1.5f} | Running loss: {:1.5f}'.format(
-                        epoch_num, iter_num, float(classification_loss), float(regression_loss), np.mean(loss_hist)))
+                print('Epoch: {} | Iteration: {} | Classification loss: {:1.5f} | Regression loss: {:1.5f} | Epoch loss: {:1.5f}\r'.format(
+                          epoch_num+epochpassed, iter_num, float(classification_loss), float(regression_loss), np.mean(loss_hist)),end='')
 
                 del classification_loss
                 del regression_loss
             except Exception as e:
                 print(e)
                 continue
+        
+        print('Epoch: {}  | Classification loss: {:1.5f} | Regression loss: {:1.5f} | Epoch loss: {:1.5f}'.format(
+                        epoch_num+epochpassed,  np.mean(epoch_classification_loss), np.mean(epoch_regression_loss), np.mean(epoch_loss)))
+        
+        writer.add_scalar('lossrecord/regressionloss', np.mean(epoch_regression_loss),epoch_num+epochpassed)
+        writer.add_scalar('lossrecord/classificationloss', np.mean(epoch_regression_loss), epoch_num+epochpassed)
+        writer.add_scalar('lossrecord/epochloss', np.mean(epoch_loss), epoch_num+epochpassed)
 
         if parser.dataset == 'coco':
 
@@ -206,12 +220,13 @@ def main(args=None):
 
         scheduler.step(np.mean(epoch_loss))
 
-        if epoch_num%5==0:
-            torch.save(retinanet.module, '{}_finetune_{}.pt'.format(parser.dataset, epoch_num))
+        if epoch_num%10==0:
+            torch.save(retinanet.module, '{}_finetune_{}.pt'.format(parser.dataset, epoch_num+epochpassed))
 
-    retinanet.eval()
+    #retinanet.eval()
 
-    #torch.save(retinanet, 'model_finetune_reg&class_lr1e-6_final.pt')
+    torch.save(retinanet.module, '{}_finetune_{}.pt'.format(parser.dataset,parser.epochs+epochpassed))
+    writer.close()
 
 
 if __name__ == '__main__':
