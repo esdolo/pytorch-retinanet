@@ -209,11 +209,11 @@ def main(args=None):
         scheduler.step(np.mean(epoch_loss))
 
         if epoch_num%10==0:
-            torch.save(retinanet.module, '{}_retinanet{}_highResolution_{}.pt'.format(parser.dataset, parser.depth,epoch_num+epochpassed))
+            torch.save(retinanet.module, './models/{}_retinanet{}_highResolution4fold_{}.pt'.format(parser.dataset, parser.depth,epoch_num+epochpassed))
 
     #retinanet.eval()
 
-    torch.save(retinanet.module, '{}_retinanet{}_highResolution_{}.pt'.format(parser.dataset, parser.depth,parser.epochs+epochpassed))
+    torch.save(retinanet.module, './models/{}_retinanet{}_highResolution4fold_{}.pt'.format(parser.dataset, parser.depth,parser.epochs+epochpassed))
     writer.close()
 
 

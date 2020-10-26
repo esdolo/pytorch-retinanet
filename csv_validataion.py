@@ -21,7 +21,7 @@ def main(args=None):
 
     parser = parser.parse_args(args)
 
-    dataset_val = CSVDataset(train_file='./foreign_object_dataset/train_standard_annotation.csv', class_list='./foreign_object_dataset/class4_classlist.csv',
+    dataset_val = CSVDataset(train_file=parser.csv_path, class_list='./foreign_object_dataset/class4_classlist.csv',
                                    transform=transforms.Compose([Normalizer(), Resizer()]))
 
 
