@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
 
 import argparse
 import collections
@@ -79,11 +79,11 @@ def main(args=None):
 
     #sampler = AspectRatioBasedSampler(dataset_train, batch_size=2, drop_last=False)
     sampler = AspectRatioBasedSampler(dataset_train, parser.batch_size, drop_last=False)
-    dataloader_train = DataLoader(dataset_train, num_workers=8, collate_fn=collater, batch_sampler=sampler)
+    dataloader_train = DataLoader(dataset_train, num_workers=16, collate_fn=collater, batch_sampler=sampler)
 
     if dataset_val is not None:
         sampler_val = AspectRatioBasedSampler(dataset_val, batch_size=1, drop_last=False)
-        dataloader_val = DataLoader(dataset_val, num_workers=3, collate_fn=collater, batch_sampler=sampler_val)
+        dataloader_val = DataLoader(dataset_val, num_workers=8, collate_fn=collater, batch_sampler=sampler_val)
 
     epochpassed=0
     # Create the model
@@ -123,7 +123,7 @@ def main(args=None):
 
     retinanet.training = True
 
-    optimizer = optim.Adam(retinanet.parameters(), lr=1e-7)#original:1e-5
+    optimizer = optim.Adam(retinanet.parameters(), lr=1e-5)#original:1e-5
     #optimizer =optim.SGD(retinanet.parameters(), lr=0.01,weight_decay=0.0001, momentum=0.9)
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
@@ -209,11 +209,11 @@ def main(args=None):
         scheduler.step(np.mean(epoch_loss))
 
         if epoch_num%10==0:
-            torch.save(retinanet.module, '{}_retinanet{}_ADAM_{}.pt'.format(parser.dataset, parser.depth,epoch_num+epochpassed))
+            torch.save(retinanet.module, '{}_retinanet{}_highResolution_{}.pt'.format(parser.dataset, parser.depth,epoch_num+epochpassed))
 
     #retinanet.eval()
 
-    torch.save(retinanet.module, '{}_retinanet{}_ADAM_{}.pt'.format(parser.dataset, parser.depth,parser.epochs+epochpassed))
+    torch.save(retinanet.module, '{}_retinanet{}_highResolution_{}.pt'.format(parser.dataset, parser.depth,parser.epochs+epochpassed))
     writer.close()
 
 

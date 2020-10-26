@@ -29,6 +29,7 @@ foreign_object_dataset/JPEGImages/
 runs/
 *.pth
 *.ipynb
+models/
 
 
 # PyInstaller
